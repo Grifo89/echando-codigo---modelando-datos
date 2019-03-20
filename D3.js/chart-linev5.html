@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style media="screen">
+      .line-chart
+      {
+          border: 1px solid lightgray;
+      }
+    </style>
+  </head>
+  <body>
+    <svg></svg>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script type="text/javascript">
+
+      d3.json("turnstile_traffic.json")
+        .then(data => draw(data))
+
+      function draw(data) {
+        var svgWidth = 1000, svgHeight = 600;
+        var margin = { top: 20, right: 20, bottom: 30, left: 50};
+        var width = svgWidth - margin.left - margin.right;
+        var height = svgHeight - margin.top - margin.bottom;
+
+        var svg = d3.select("svg")
+          .attr("width", svgWidth)
+          .attr("height", svgHeight)
+          .attr("class", "line-chart")
+          // .attr("transform","translate(350,150)")
+
+        var g = svg.append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+
+        // Guardamos el dominio de los datos, es decir el menor y el mayor de los datos
+        var count_extent = d3.extent(data.times_square.concat(data.grand_central), d => d.count)
+
+        var time_extent = d3.extent(data.times_square.concat(data.grand_central), d => d.time)
+
+        // Realizamos la escala para el gráfico de la variable escalar y la varible de tiempo
+        var count_scale = d3.scaleLinear()
+          .range([height, 0])
+          .domain(count_extent)
+
+        var time_scale = d3.scaleTime()
+          .range([0, width])
+          .domain(time_extent)
+
+
+        g.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(time_scale))
+
+        g.append("g")
+          .attr("class", "y axis")
+          .call(d3.axisLeft(count_scale))
+          .append("text")
+          .text("media de revoluciones por torniquete")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 13)
+          .attr("fill", "#000")
+
+
+
+        // Ahora creamos las lineas
+        var line = d3.line()
+          .x(d => time_scale(d.time))
+          .y(d => count_scale(d.count))
+
+        g.append("path")
+          .attr("d", line(data.times_square))
+          .attr("class", "times_square")
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 1.5)
+
+        g.append("path")
+          .attr("d", line(data.grand_central))
+          .attr("class", "grand_central")
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          
+      }
+    </script>
+  </body>
+</html>
